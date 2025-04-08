@@ -219,21 +219,21 @@ def jsonToObject(json):
     global count
     dys = json['attributes']
     # print(f'ddd {dys}')
-    days_transit = None
+    days_transit = {'t': 'Days in transit', 'val': '0'}
     
     # Recorrer los atributos para encontrar "days_transit"
     for attribute in dys:
         if attribute.get('l') == 'days_transit':
             days_transit = {'t': 'Days in transit', 'val': attribute.get('val')}
             break
-
+    # print(f"el json {json}")
     # Crear el objeto con las claves correctas
     myObject = {
         # 'h':'hh'
         "tracking": json['trackingId'],
         "status": json['status'],
         "days_in_trans": days_transit,  # Aquí debes usar days_transit, no toda la lista
-        "origin": json['origin'],
+        "origin": 'no',
         "destination": json['destination'],
         "lastState": json['lastState'],
         "states": json['states']
