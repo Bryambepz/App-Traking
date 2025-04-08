@@ -197,7 +197,7 @@ def track_shipment(message):
 # Function to check tracking status with UUID
 def check_tracking_status(uuid):
     response = requests.get(url, params={'apiKey': apiKeyTrak, 'uuid': uuid})
-    priny(f'el respo =>\n{response}')
+    print(f'el respo =>\n{response}')
     try:
         if response.status_code == 200:
             if response.json()['done']:
