@@ -62,7 +62,7 @@ def handle_option(message):
                 bt.send_message(message.chat.id, "3h")
                 tiempo(message, 3)
             elif selected_option == 'Cada 5':
-                bt.send_message(message.chat.id, "2h")
+                bt.send_message(message.chat.id, "5h")
                 tiempo(message, 5)
             else:
                 bt.send_message(message.chat.id, "Opción no reconocida")
@@ -142,8 +142,8 @@ def tiempo(message, timeR):
 
         notification = timeR*3600
         print(f'notifica en {notification}\n\n')
-        # time.sleep(notification)
-        time.sleep(5)
+        time.sleep(notification)
+        # time.sleep(5)
     user_data[message.chat.id]['tracking'] = False
     bt.send_message(message.chat.id, "Se ha agotado la cantidad de chequeos de estado de su pedido.\nSi desea seguir siendo informado, por favor, vuelva a realizar el proceso.", disable_notification=False)
 
