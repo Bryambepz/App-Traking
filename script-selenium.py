@@ -15,14 +15,14 @@ url = 'https://parcelsapp.com/api/v3/shipments/tracking'
 # Bot
 tokenBot = '7684872345:AAE84x-IhGC-ngCz5ozHgMXNQ-V5g9K5TLw'
 bt = telebot.TeleBot(tokenBot, parse_mode=None) # You can set parse_mode by default. HTML or MARKDOWN
-
+bt.remove_webhook()
 # Diccionario para almacenar temporalmente la información del usuario
 user_data = {}
 count = 1
 
 @bt.message_handler(commands=['start', 'help'])
 def send_welcome(message):
-    print('aaaaaaa')
+    print('aaaaaaa', flush=True)
     # or add KeyboardButton one row at a time:
     markup = types.ReplyKeyboardMarkup()
     itembta = types.KeyboardButton('Trackear mi pedido')
@@ -72,7 +72,7 @@ def handle_option(message):
 
 # Función para manejar el ingreso del string
 def get_string(message):
-    print(f"mi user {user_data}")
+    print(f"mi user {user_data}", flush=True)
     
     user_data[message.chat.id]['string'] = message.text  # Guardar el string ingresado
     bt.send_message(message.chat.id, "Ahora indica cuantas veces al dia quieres que se revise el estado de tracking:")
@@ -109,12 +109,12 @@ def tiempo(message, timeR):
     diferencia_horas = (hora_futura - hora_actual).total_seconds() / 3600
     nTimes =  diferencia_horas / timeR
     timesRequest = round(nTimes)
-    print(f"Solicita n {timeR} total {timesRequest}")
+    print(f"Solicita n {timeR} total {timesRequest}", flush=True)
     for i in range(timesRequest):
         user_data[message.chat.id]['tracking'] = True
         ojbTraking = track_shipment(message)
         # ojbTraking = {'tracking': '281833789154', 'status': 'delivered', 'days_in_trans': {'t': 'Days in transit', 'val': '6'}, 'origin': 'United States', 'destination': 'United States', 'lastState': {'location': 'Miami, FL', 'date': '2024-11-21T14:16:00Z', 'carrier': 0, 'status': 'Delivered'}, 'states': [{'location': 'Miami, FL', 'date': '2024-11-21T14:16:00Z', 'carrier': 0, 'status': 'Delivered'}]}
-        print(f"mi trak=>\n{ojbTraking}")
+        print(f"mi trak=>\n{ojbTraking}", flush=True)
         if ojbTraking == 'Error' :
             bt.send_message(message.chat.id, "No existe ese idTracking o ya expiro, ingrese uno actual.\nIntente nuevamente")
             user_data[message.chat.id]['tracking'] = False
@@ -141,7 +141,7 @@ def tiempo(message, timeR):
             #     bt.send_message(message.chat.id, "=====", disable_notification=False )
 
         notification = timeR*3600
-        print(f'notifica en {notification}\n\n')
+        print(f'notifica en {notification}\n\n', flush=True)
         time.sleep(notification)
         # time.sleep(5)
     user_data[message.chat.id]['tracking'] = False
@@ -177,15 +177,15 @@ def track_shipment(message):
         try:
             # Get UUID from response
             uuid = response.json()['uuid']
-            print(f'el uuid {uuid}')
+            print(f'el uuid {uuid}', flush=True)
             response = check_tracking_status(uuid)
         except Exception as e:
             # Maneja cualquier otro tipo de error
-            print(f"Error inesperado: {e}")
+            print(f"Error inesperado: {e}", flush=True)
             # response = jsonToObject(response.json()['shipments'][0] )
         
     else:
-        print(f'no hay dataa {response.text}')
+        print(f'no hay dataa {response.text}', flush=True)
         
     # Devuelve la respuesta de la API
     # return jsonify(response)
@@ -197,21 +197,25 @@ def track_shipment(message):
 # Function to check tracking status with UUID
 def check_tracking_status(uuid):
     response = requests.get(url, params={'apiKey': apiKeyTrak, 'uuid': uuid})
-    print(f'el respo =>\n{response}')
+    print(f'el respo =>\n{response}', flush=True)
     try:
         if response.status_code == 200:
             if response.json()['done']:
-                print('Tracking complete')
-                response = jsonToObject(response.json()['shipments'] )
+                print('Tracking complete', flush=True)
+                try:
+                    response = jsonToObject(response.json()['shipments'] )
+                except Exception as e:
+                    print(f"Error inesperado al ler json a obj: {e}", flush=True)
+                    response = 'error'
             # else:
-            #     print('Tracking in progress...')
+            #     print('Tracking in progress...', flush=True)
             #     time.sleep(time_wait) # sleep for N sec
             #     check_tracking_status()
         else:
-            print(response.text)
+            print(response.text, flush=True)
     except Exception as e:
         # Maneja cualquier otro tipo de error
-        print(f"Error inesperado: {e}")
+        print(f"Error inesperado: {e}", flush=True)
         response = 'error'
     return response
 
