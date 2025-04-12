@@ -111,6 +111,8 @@ def tiempo(message, timeR):
     timesRequest = round(nTimes)
     print(f"Solicita n {timeR} total {timesRequest}", flush=True)
     for i in range(timesRequest):
+        print(f"chat {message}")
+        print(f"chat id {message.chat.id}")
         user_data[message.chat.id]['tracking'] = True
         ojbTraking = track_shipment(message)
         # ojbTraking = {'tracking': '281833789154', 'status': 'delivered', 'days_in_trans': {'t': 'Days in transit', 'val': '6'}, 'origin': 'United States', 'destination': 'United States', 'lastState': {'location': 'Miami, FL', 'date': '2024-11-21T14:16:00Z', 'carrier': 0, 'status': 'Delivered'}, 'states': [{'location': 'Miami, FL', 'date': '2024-11-21T14:16:00Z', 'carrier': 0, 'status': 'Delivered'}]}
@@ -169,16 +171,19 @@ def track_shipment(message):
         "languaje": "es",
         "apiKey": f"{apiKeyTrak}"  # Reemplaza con tu clave API
     }
-
+    print(f"data para el trak {data}")
     # Realiza la solicitud POST
     response = requests.post(url, json=data)
     if response.status_code == 200:
         # print(f'el trak ==>\n{response.json()}')
         try:
             # Get UUID from response
-            uuid = response.json()['uuid']
+            # uuid = response.json()['uuid']
+            # uuid = json.get('uui', None)
+            uuid = response.json().get('uui', None)
             print(f'el uuid {uuid}', flush=True)
-            response = check_tracking_status(uuid)
+            if ( uuid is not None ):
+                response = check_tracking_status(uuid)
         except Exception as e:
             # Maneja cualquier otro tipo de error
             print(f"Error inesperado: {e}", flush=True)
@@ -189,6 +194,8 @@ def track_shipment(message):
         
     # Devuelve la respuesta de la API
     # return jsonify(response)
+    
+    print(f"json del track {response.json()}")
     if response.json().get('shipments'):
         return jsonToObject(response.json()['shipments'][0] )
     else:
@@ -197,13 +204,14 @@ def track_shipment(message):
 # Function to check tracking status with UUID
 def check_tracking_status(uuid):
     response = requests.get(url, params={'apiKey': apiKeyTrak, 'uuid': uuid})
-    print(f'el respo =>\n{response}', flush=True)
+    print(f'el respo =>\n{response.json()}', flush=True)
     try:
         if response.status_code == 200:
             if response.json()['done']:
                 print('Tracking complete', flush=True)
                 try:
-                    response = jsonToObject(response.json()['shipments'] )
+                    print(f"check track status {response.json()}")
+                    response = jsonToObject(response.json()['shipments'][0] )
                 except Exception as e:
                     print(f"Error inesperado al ler json a obj: {e}", flush=True)
                     response = 'error'
@@ -219,32 +227,38 @@ def check_tracking_status(uuid):
         response = 'error'
     return response
 
-def jsonToObject(json):
+def jsonToObject(jsonReq):
+    _json = jsonReq
     global count
-    dys = json['attributes']
-    # print(f'ddd {dys}')
-    days_transit = {'t': 'Days in transit', 'val': '0'}
-    
-    # Recorrer los atributos para encontrar "days_transit"
-    for attribute in dys:
-        if attribute.get('l') == 'days_transit':
-            days_transit = {'t': 'Days in transit', 'val': attribute.get('val')}
-            break
-    # print(f"el json {json}")
-    # Crear el objeto con las claves correctas
-    myObject = {
-        # 'h':'hh'
-        "tracking": json['trackingId'],
-        "status": json['status'],
-        "days_in_trans": days_transit,  # Aquí debes usar days_transit, no toda la lista
-        "origin": 'no',
-        "destination": json['destination'],
-        "lastState": json['lastState'],
-        "states": json['states']
-    }
-    count += 1
-    
-    return myObject
+    print(f"convert to json")
+    try:
+        dys = _json.get('attributes')
+        print(f"222 to json {dys}")
+        # print(f'ddd {dys}')
+        days_transit = {'t': 'Days in transit', 'val': '0'}
+        
+        # Recorrer los atributos para encontrar "days_transit"
+        for attribute in dys:
+            if attribute.get('l') == 'days_transit':
+                days_transit = {'t': 'Days in transit', 'val': attribute.get('val')}
+                break
+        # print(f"el json {_json}")
+        # Crear el objeto con las claves correctas
+        myObject = {
+            # 'h':'hh'
+            "tracking": _json['trackingId'],
+            "status": _json['status'],
+            "days_in_trans": days_transit,  # Aquí debes usar days_transit, no toda la lista
+            "origin": 'no',
+            "destination": _json.get('destination', 'Aun no destino'),
+            "lastState": _json['lastState'],
+            "states": _json['states']
+        }
+        count += 1
+        
+        return myObject
+    except Exception as e:
+        print(f"Error jsontoobj: {e}", flush=True)
 
 bt.polling()
 
