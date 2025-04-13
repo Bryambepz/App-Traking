@@ -13,7 +13,7 @@ apiKeyTrak = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1aWQiOiI2YWVmYWEyMC1hM2JlL
 url = 'https://parcelsapp.com/api/v3/shipments/tracking'
 
 # Bot
-tokenBot = '7684872345:AAE84x-IhGC-ngCz5ozHgMXNQ-V5g9K5TLw'
+tokenBot = '7684872345:AAF24QUuyblnN3LLeIjiUkP34cvm9ZPhW1E'
 bt = telebot.TeleBot(tokenBot, parse_mode=None) # You can set parse_mode by default. HTML or MARKDOWN
 bt.remove_webhook()
 # Diccionario para almacenar temporalmente la información del usuario
@@ -145,6 +145,7 @@ def tiempo(message, timeR):
         notification = timeR*3600
         print(f'notifica en {notification}\n\n', flush=True)
         time.sleep(notification)
+        print("fin sleep")
         # time.sleep(5)
     user_data[message.chat.id]['tracking'] = False
     bt.send_message(message.chat.id, "Se ha agotado la cantidad de chequeos de estado de su pedido.\nSi desea seguir siendo informado, por favor, vuelva a realizar el proceso.", disable_notification=False)
@@ -174,15 +175,17 @@ def track_shipment(message):
     print(f"data para el trak {data}")
     # Realiza la solicitud POST
     response = requests.post(url, json=data)
+    hayUuid = False
     if response.status_code == 200:
         # print(f'el trak ==>\n{response.json()}')
         try:
             # Get UUID from response
             # uuid = response.json()['uuid']
             # uuid = json.get('uui', None)
-            uuid = response.json().get('uui', None)
+            uuid = response.json().get('uuid', None)
             print(f'el uuid {uuid}', flush=True)
             if ( uuid is not None ):
+                hayUuid = True
                 response = check_tracking_status(uuid)
         except Exception as e:
             # Maneja cualquier otro tipo de error
@@ -194,12 +197,15 @@ def track_shipment(message):
         
     # Devuelve la respuesta de la API
     # return jsonify(response)
-    
-    print(f"json del track {response.json()}")
-    if response.json().get('shipments'):
-        return jsonToObject(response.json()['shipments'][0] )
+    if ( hayUuid == False):
+        print(f"json del track {response.json()}")
+        if response.json().get('shipments'):
+            return jsonToObject(response.json()['shipments'][0] )
+        else:
+            return 'Error'
     else:
-        return 'Error'
+        print(f"hay {response}")
+        return response
 
 # Function to check tracking status with UUID
 def check_tracking_status(uuid):
@@ -255,12 +261,20 @@ def jsonToObject(jsonReq):
             "states": _json['states']
         }
         count += 1
-        
+        print("obj converted")
         return myObject
     except Exception as e:
         print(f"Error jsontoobj: {e}", flush=True)
 
-bt.polling()
+# Polling robusto
+while True:
+    try:
+        print("Iniciando el polling...")
+        bt.polling(non_stop=True, timeout=120)
+    except Exception as e:
+        print(f"Ocurrió un error: {e}")
+        print("Reintentando en 5 segundos...")
+        time.sleep(5)
 
 # if __name__ == '__main__':
 #     app.run(debug=True)
