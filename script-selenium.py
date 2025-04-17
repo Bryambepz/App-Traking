@@ -222,7 +222,7 @@ def check_tracking_status(uuid):
                 print('Tracking complete', flush=True)
                 try:
                     print(f"check track status {response.json()}")
-                    if len(response.json()['shipments'] > 0 ) :
+                    if len(response.json()['shipments']) > 0 :
                         response = jsonToObject(response.json()['shipments'][0] )
                     else:
                         response = "Error: No hay registros de envio"
