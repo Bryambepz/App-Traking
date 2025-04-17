@@ -4,6 +4,7 @@ import requests
 import telebot
 import time
 import json
+import pytz
 
 # app = Flask(__name__)
 
@@ -19,6 +20,8 @@ bt.remove_webhook()
 # Diccionario para almacenar temporalmente la información del usuario
 user_data = {}
 count = 1
+# Definir la zona horaria de Ecuador
+ecuador_tz = pytz.timezone('America/Guayaquil')
 
 @bt.message_handler(commands=['start', 'help'])
 def send_welcome(message):
@@ -143,7 +146,9 @@ def tiempo(message, timeR):
             #     bt.send_message(message.chat.id, "=====", disable_notification=False )
 
         notification = timeR*3600
-        print(f'notifica en {notification}\n\n', flush=True)
+        # Obtener la hora actual en esa zona
+        hora_ecuador = datetime.now(ecuador_tz)
+        print(f'time= {hora_ecuador.strftime("%Y-%m-%d %H:%M:%S")} ---> notifica en {notification}\n\n', flush=True)
         time.sleep(notification)
         print("fin sleep")
         # time.sleep(5)
