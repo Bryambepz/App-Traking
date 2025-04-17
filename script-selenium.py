@@ -117,7 +117,7 @@ def tiempo(message, timeR):
         ojbTraking = track_shipment(message)
         # ojbTraking = {'tracking': '281833789154', 'status': 'delivered', 'days_in_trans': {'t': 'Days in transit', 'val': '6'}, 'origin': 'United States', 'destination': 'United States', 'lastState': {'location': 'Miami, FL', 'date': '2024-11-21T14:16:00Z', 'carrier': 0, 'status': 'Delivered'}, 'states': [{'location': 'Miami, FL', 'date': '2024-11-21T14:16:00Z', 'carrier': 0, 'status': 'Delivered'}]}
         print(f"mi trak=>\n{ojbTraking}", flush=True)
-        if ojbTraking == 'Error' :
+        if 'Error' in ojbTraking :
             bt.send_message(message.chat.id, "No existe ese idTracking o ya expiro, ingrese uno actual.\nIntente nuevamente")
             user_data[message.chat.id]['tracking'] = False
             send_welcome(message)
@@ -217,7 +217,10 @@ def check_tracking_status(uuid):
                 print('Tracking complete', flush=True)
                 try:
                     print(f"check track status {response.json()}")
-                    response = jsonToObject(response.json()['shipments'][0] )
+                    if len(response.json()['shipments'] > 0 ) :
+                        response = jsonToObject(response.json()['shipments'][0] )
+                    else:
+                        response = "Error: No hay registros de envio"
                 except Exception as e:
                     print(f"Error inesperado al ler json a obj: {e}", flush=True)
                     response = 'error'
